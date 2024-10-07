@@ -21,8 +21,8 @@ import {pause, play} from './assets/svg';
 import {SvgXml} from 'react-native-svg';
 const apiPrefix = 'https://accounts.spotify.com/api';
 const apiEndpoint = 'https://api.spotify.com/v1';
-const clientId = '602849a078c741bf9caf8939a43ef8c0';
-const clientSecret = '77437aeea8ea402c96a4ba6ce0ca8fc5';
+const clientId = '5cf191e9576a4962a0e59e1843e4ba8a';
+const clientSecret = '18f56d82ff9f4851bb012dc3086e613b';
 
 const PlayerControls = () => {
   const [isPlaying, setIsPlaying] = useState(false);
