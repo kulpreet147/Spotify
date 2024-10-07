@@ -1,274 +1,3 @@
-// import React, {useEffect, useState} from 'react';
-// import {
-//   StyleSheet,
-//   Text,
-//   View,
-//   FlatList,
-//   TouchableOpacity,
-//   Image,
-//   TextInput,
-// } from 'react-native';
-// import LinearGradient from 'react-native-linear-gradient';
-// import base64 from 'react-native-base64';
-// import TrackPlayer from 'react-native-track-player';
-
-// const apiPrefix = 'https://accounts.spotify.com/api';
-// const apiEndpoint = 'https://api.spotify.com/v1';
-// const clientId = '602849a078c741bf9caf8939a43ef8c0';
-// const clientSecret = '77437aeea8ea402c96a4ba6ce0ca8fc5';
-
-// const App = () => {
-//   const [accessToken, setAccessToken] = useState('');
-//   const [tracks, setTracks] = useState([]);
-//   const [error, setError] = useState('');
-//   const [searchQuery, setSearchQuery] = useState('');
-//   const [isSearching, setIsSearching] = useState(false);
-
-//   const base64Credentials = base64.encode(clientId + ':' + clientSecret);
-
-//   const setUpPlayer = async () => {
-//     try {
-//       await TrackPlayer.setupPlayer();
-//     } catch (e) {
-//       console.error('Failed to setup player: ', e);
-//     }
-//   };
-
-//   const getAccessToken = async () => {
-//     try {
-//       const response = await fetch(`${apiPrefix}/token`, {
-//         method: 'POST',
-//         headers: {
-//           Authorization: `Basic ${base64Credentials}`,
-//           'Content-Type': 'application/x-www-form-urlencoded',
-//         },
-//         body: 'grant_type=client_credentials',
-//       });
-
-//       if (!response.ok) {
-//         throw new Error('Failed to obtain access token');
-//       }
-
-//       const data = await response.json();
-//       setAccessToken(data.access_token);
-//     } catch (err) {
-//       setError('Error obtaining access token: ' + err.message);
-//     }
-//   };
-
-//   const searchTracks = async () => {
-//     if (!accessToken || !searchQuery) return;
-//     setIsSearching(true);
-
-//     try {
-//       const response = await fetch(
-//         `${apiEndpoint}/search?q=${encodeURIComponent(searchQuery)}&type=track`,
-//         {
-//           headers: {
-//             Authorization: `Bearer ${accessToken}`,
-//           },
-//         },
-//       );
-
-//       if (!response.ok) {
-//         throw new Error('Failed to search tracks');
-//       }
-
-//       const data = await response.json();
-//       setTracks(data.tracks.items);
-//     } catch (err) {
-//       setError('Error searching tracks: ' + err.message);
-//     }
-//   };
-
-//   const playTrack = async (item) => {
-//     console.log('Attempting to play track:', item);
-//     if (!item.preview_url) {
-//       console.log('No preview available for:', item.name);
-//       return;
-//     }
-//     try {
-//       await TrackPlayer.reset();
-//       await TrackPlayer.add({
-//         id: item.id,
-//         url: item.preview_url,
-//         title: item.name,
-//         artist: item.artists[0].name,
-//         artwork: item.album.images[0].url,
-//       });
-//       console.log('Track added to player:', item.name);
-//       await TrackPlayer.play();
-//       console.log('Playback started');
-//     } catch (err) {
-//       console.error('Error playing track:', err);
-//     }
-//   };
-
-//   const fetchNewReleases = async () => {
-//     if (!accessToken) return;
-
-//     try {
-//       const response = await fetch(`${apiEndpoint}/browse/new-releases`, {
-//         headers: {
-//           Authorization: `Bearer ${accessToken}`,
-//         },
-//       });
-
-//       if (!response.ok) {
-//         throw new Error('Failed to fetch new releases');
-//       }
-
-//       const data = await response.json();
-//       setTracks(data.albums.items);
-//     } catch (err) {
-//       setError('Error fetching new releases: ' + err.message);
-//     }
-//   };
-
-//   useEffect(() => {
-//     setUpPlayer();
-//     getAccessToken();
-//   }, []);
-
-//   useEffect(() => {
-//     if (accessToken) {
-//       fetchNewReleases();
-//     }
-//   }, [accessToken]);
-
-//   const renderItem = ({item}) => {
-//     if (!item) return null; // Skip rendering if item is undefined
-
-//     let imageUrl, name, artistName;
-
-//     if (isSearching) {
-//       imageUrl = item.album && item.album.images && item.album.images[0] ? item.album.images[0].url : null;
-//       name = item.name;
-//       artistName = item.artists && item.artists[0] ? item.artists[0].name : 'Unknown Artist';
-//     } else {
-//       imageUrl = item.images && item.images[0] ? item.images[0].url : null;
-//       name = item.name;
-//       artistName = item.artists && item.artists[0] ? item.artists[0].name : 'Unknown Artist';
-//     }
-
-//     if (!imageUrl) return null; // Skip rendering if no image is available
-
-//     return (
-//       <TouchableOpacity
-//         style={styles.trackItem}
-//         onPress={() => playTrack(item)}>
-//         <Image
-//           source={{uri: imageUrl}}
-//           style={styles.albumArt}
-//         />
-//         <View style={styles.trackInfo}>
-//           <Text style={styles.trackName}>{name}</Text>
-//           <Text style={styles.artistName}>{artistName}</Text>
-//         </View>
-//       </TouchableOpacity>
-//     );
-//   };
-
-//   return (
-//     <LinearGradient
-//       colors={['#a34c0d', '#592804', '#241001', '#111111']}
-//       style={styles.linearGradient}>
-//       <View style={styles.searchContainer}>
-//         <TextInput
-//           style={styles.input}
-//           onChangeText={setSearchQuery}
-//           value={searchQuery}
-//           placeholder="🔍 Search for a song"
-//           placeholderTextColor="#999"
-//         />
-//         <TouchableOpacity style={styles.button} onPress={searchTracks}>
-//           <Text style={styles.buttonText}>Search</Text>
-//         </TouchableOpacity>
-//       </View>
-
-//       <View style={styles.container}>
-//         <Text style={styles.header}>{isSearching ? 'Search Results' : 'New Releases'}</Text>
-//         {error ? (
-//           <Text style={styles.error}>{error}</Text>
-//         ) : (
-//           <FlatList
-//             data={tracks}
-//             keyExtractor={item => item.id}
-//             renderItem={renderItem}
-//           />
-//         )}
-//       </View>
-//     </LinearGradient>
-//   );
-// };
-
-// export default App;
-
-// const styles = StyleSheet.create({
-//   linearGradient: {
-//     flex: 1,
-//   },
-//   container: {
-//     flex: 1,
-//     padding: 10,
-//   },
-//   searchContainer: {
-//     flexDirection: 'row',
-//     padding: 10,
-//     justifyContent: 'space-between',
-//   },
-//   input: {
-//     flex: 1,
-//     height: 40,
-//     backgroundColor: '#704830',
-//     borderRadius: 20,
-//     paddingLeft: 15,
-//     color: 'white',
-//   },
-//   button: {
-//     backgroundColor: '#1DB954',
-//     padding: 10,
-//     borderRadius: 20,
-//     marginLeft: 10,
-//   },
-//   buttonText: {
-//     color: 'white',
-//     fontWeight: 'bold',
-//   },
-//   header: {
-//     fontSize: 24,
-//     fontWeight: 'bold',
-//     marginBottom: 10,
-//     color: 'white',
-//   },
-//   trackItem: {
-//     flexDirection: 'row',
-//     alignItems: 'center',
-//     marginBottom: 15,
-//   },
-//   albumArt: {
-//     width: 60,
-//     height: 60,
-//     borderRadius: 5,
-//   },
-//   trackInfo: {
-//     marginLeft: 10,
-//   },
-//   trackName: {
-//     fontSize: 16,
-//     fontWeight: 'bold',
-//     color: 'white',
-//   },
-//   artistName: {
-//     fontSize: 14,
-//     color: '#ccc',
-//   },
-//   error: {
-//     color: 'red',
-//     fontSize: 16,
-//   },
-// });
-
 import React, {useEffect, useState} from 'react';
 import {
   StyleSheet,
@@ -286,6 +15,7 @@ import TrackPlayer, {
   useProgress,
   useTrackPlayerEvents,
   Event,
+  RepeatMode,
 } from 'react-native-track-player';
 import {pause, play} from './assets/svg';
 import {SvgXml} from 'react-native-svg';
@@ -293,6 +23,7 @@ const apiPrefix = 'https://accounts.spotify.com/api';
 const apiEndpoint = 'https://api.spotify.com/v1';
 const clientId = '602849a078c741bf9caf8939a43ef8c0';
 const clientSecret = '77437aeea8ea402c96a4ba6ce0ca8fc5';
+
 const PlayerControls = () => {
   const [isPlaying, setIsPlaying] = useState(false);
   const progress = useProgress();
@@ -364,7 +95,6 @@ const App = () => {
       console.error('Failed to setup player: ', e);
     }
   };
-
   const getAccessToken = async () => {
     try {
       const response = await fetch(`${apiPrefix}/token`, {
@@ -386,7 +116,6 @@ const App = () => {
       setError('Error obtaining access token: ' + err.message);
     }
   };
-
   const searchTracks = async () => {
     if (!accessToken || !searchQuery) return;
     setIsSearching(true);
@@ -437,7 +166,6 @@ const App = () => {
   const fetchNewReleases = async () => {
     if (!accessToken) return;
     try {
-      // First, fetch new release albums
       const albumResponse = await fetch(
         `${apiEndpoint}/browse/new-releases?limit=10`,
         {
@@ -450,7 +178,6 @@ const App = () => {
         throw new Error('Failed to fetch new releases');
       }
       const albumData = await albumResponse.json();
-      // For each album, fetch its tracks
       const trackPromises = albumData.albums.items.map(async album => {
         const tracksResponse = await fetch(
           `${apiEndpoint}/albums/${album.id}/tracks?limit=1`,
@@ -465,7 +192,6 @@ const App = () => {
         }
         const tracksData = await tracksResponse.json();
         const track = tracksData.items[0];
-        // Fetch full track details to get preview_url
         const fullTrackResponse = await fetch(
           `${apiEndpoint}/tracks/${track.id}`,
           {
@@ -480,7 +206,7 @@ const App = () => {
         const fullTrackData = await fullTrackResponse.json();
         return {
           ...fullTrackData,
-          album: album, // Include album data for image
+          album: album,
         };
       });
       const tracks = (await Promise.all(trackPromises)).filter(
@@ -502,6 +228,13 @@ const App = () => {
       fetchNewReleases();
     }
   }, [accessToken]);
+
+  useEffect(() => {
+    const RepeatSong = async () => {
+      await TrackPlayer.setRepeatMode(RepeatMode.Track);
+    };
+    RepeatSong();
+  }, []);
 
   const renderItem = ({item}) => {
     if (!item || !item?.preview_url) return null;
