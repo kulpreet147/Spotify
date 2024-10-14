@@ -423,56 +423,139 @@
 //   },
 // });
 
+// import React, { useState } from 'react';
+// import { View, Text, TextInput, Button, StyleSheet } from 'react-native';
+// import Video from 'react-native-video';
+// import ytdl from 'react-native-ytdl';
 
+// const App = () => {
+//   const [youtubeUrl, setYoutubeUrl] = useState('');
+//   const [audioUrl, setAudioUrl] = useState(null);
 
+//   const fetchAudioUrl = async () => {
+//     try {
+//       const formats = await ytdl(youtubeUrl, {
+//         quality: 'highestaudio',
+//         filter: (format) => format.container === 'webm' && format.audioBitrate,
+//       });
+//       console.log("Available Formats", formats);
+//       const directAudioUrl = formats[0].url;
+//       setAudioUrl(directAudioUrl);
+//     } catch (error) {
+//       console.error('Error fetching audio URL:', error);
+//     }
+//   };
 
+//   return (
+//     <View style={styles.container}>
+//       <Text style={styles.title}>YouTube Audio Player</Text>
+//       <TextInput
+//         style={styles.input}
+//         placeholder="Enter YouTube URL"
+//         value={youtubeUrl}
+//         onChangeText={setYoutubeUrl}
+//       />
+//       <Button title="Fetch Audio" onPress={fetchAudioUrl} />
 
+//       {audioUrl && (
+//         <Video
+//           source={{ uri: audioUrl }}
+//           audioOnly
+//           controls
+//           style={styles.audioPlayer}
+//           onError={(e) => console.log('Error with video playback', e)}
+//         />
+//       )}
+//     </View>
+//   );
+// };
 
+// const styles = StyleSheet.create({
+//   container: {
+//     flex: 1,
+//     justifyContent: 'center',
+//     padding: 20,
+//   },
+//   title: {
+//     fontSize: 24,
+//     fontWeight: 'bold',
+//     textAlign: 'center',
+//     marginBottom: 20,
+//   },
+//   input: {
+//     borderColor: '#ccc',
+//     borderWidth: 1,
+//     borderRadius: 5,
+//     padding: 10,
+//     marginBottom: 20,
+//   },
+//   audioPlayer: {
+//     width: '100%',
+//     height: 50,
+//     marginTop: 20,
+//   },
+// });
 
+// export default App;
 
-import React, { useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet } from 'react-native';
-import Video from 'react-native-video';
-import ytdl from 'react-native-ytdl';
+import React, {useState} from 'react';
+import {View, Text, Button, TextInput, StyleSheet} from 'react-native';
+import Sound from 'react-native-sound';
+import axios from 'axios';
+import RNFS from 'react-native-fs';
 
-const App = () => {
-  const [youtubeUrl, setYoutubeUrl] = useState('');
-  const [audioUrl, setAudioUrl] = useState(null);
+const AudioPlayer = () => {
+  const [videoUrl, setVideoUrl] = useState('');
+  const [audio, setAudio] = useState(null);
 
   const fetchAudioUrl = async () => {
     try {
-      const formats = await ytdl(youtubeUrl, {
-        quality: 'highestaudio',
-        filter: (format) => format.container === 'webm' && format.audioBitrate,
+      const response = await axios.get(`http://192.168.1.7:3000/audio`, {
+        params: {url: videoUrl},
       });
-      console.log("Available Formats", formats);
-      const directAudioUrl = formats[0].url; 
-      setAudioUrl(directAudioUrl); 
+      const audioUrl = response.data.audioUrl;
+
+      // Download the audio file
+      const localAudioPath = `${RNFS.DocumentDirectoryPath}/audio.mp3`;
+      const download = await RNFS.downloadFile({
+        fromUrl: audioUrl,
+        toFile: localAudioPath,
+      }).promise;
+      console.log('RESPONSE',download)
+      if (download.statusCode === 200) {
+        playAudio(localAudioPath);
+      }
     } catch (error) {
-      console.error('Error fetching audio URL:', error);
+      console.error('Error fetching audio URL', error);
+    }
+  };
+
+  const playAudio = path => {
+    const sound = new Sound(path, '', error => {
+      if (error) {
+        console.error('Failed to load sound', error);
+        return;
+      }
+      setAudio(sound);
+      sound.play();
+    });
+  };
+
+  const stopAudio = () => {
+    if (audio) {
+      audio.stop();
     }
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>YouTube Audio Player</Text>
       <TextInput
         style={styles.input}
-        placeholder="Enter YouTube URL"
-        value={youtubeUrl}
-        onChangeText={setYoutubeUrl}
+        placeholder="Enter YouTube video URL"
+        onChangeText={setVideoUrl}
       />
-      <Button title="Fetch Audio" onPress={fetchAudioUrl} />
-
-      {audioUrl && (
-        <Video
-          source={{ uri: audioUrl }}
-          audioOnly
-          controls
-          style={styles.audioPlayer}
-          onError={(e) => console.log('Error with video playback', e)}
-        />
-      )}
+      <Button title="Play Audio" onPress={fetchAudioUrl} />
+      <Button title="Stop Audio" onPress={stopAudio} />
     </View>
   );
 };
@@ -481,26 +564,15 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: 'center',
-    padding: 20,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    marginBottom: 20,
+    padding: 16,
   },
   input: {
-    borderColor: '#ccc',
+    height: 40,
+    borderColor: 'gray',
     borderWidth: 1,
-    borderRadius: 5,
-    padding: 10,
-    marginBottom: 20,
-  },
-  audioPlayer: {
-    width: '100%',
-    height: 50,
-    marginTop: 20,
+    marginBottom: 12,
+    paddingHorizontal: 8,
   },
 });
 
-export default App;
+export default AudioPlayer;

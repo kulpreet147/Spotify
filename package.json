@@ -19,11 +19,13 @@
     "react-native-base64": "^0.2.1",
     "react-native-fs": "^2.20.0",
     "react-native-linear-gradient": "^2.8.3",
+    "react-native-sound": "^0.11.2",
     "react-native-svg": "^15.7.1",
     "react-native-track-player": "^4.1.1",
     "react-native-vector-icons": "^10.2.0",
     "react-native-video": "^6.6.4",
     "react-native-ytdl": "^4.8.3",
+    "yt-dlp-exec": "^1.0.2",
     "ytdl-core": "^4.11.5"
   },
   "devDependencies": {
