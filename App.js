@@ -443,11 +443,11 @@ const App = () => {
     try {
       const formats = await ytdl(youtubeUrl, {
         quality: 'highestaudio',
-        filter: 'audioonly'
+        filter: (format) => format.container === 'webm' && format.audioBitrate,
       });
-      console.log("RESPONSE",formats)
-      const directAudioUrl = formats[0].url;
-      setAudioUrl(directAudioUrl);
+      console.log("Available Formats", formats);
+      const directAudioUrl = formats[0].url; 
+      setAudioUrl(directAudioUrl); 
     } catch (error) {
       console.error('Error fetching audio URL:', error);
     }
@@ -470,6 +470,7 @@ const App = () => {
           audioOnly
           controls
           style={styles.audioPlayer}
+          onError={(e) => console.log('Error with video playback', e)}
         />
       )}
     </View>
