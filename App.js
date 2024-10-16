@@ -502,7 +502,6 @@ import React, {useState} from 'react';
 import {View, Text, Button, TextInput, StyleSheet} from 'react-native';
 import Sound from 'react-native-sound';
 import axios from 'axios';
-import RNFS from 'react-native-fs';
 
 const AudioPlayer = () => {
   const [videoUrl, setVideoUrl] = useState('');
@@ -515,7 +514,6 @@ const AudioPlayer = () => {
       });
       const audioUrl = response.data.audioUrl;
   
-      // Directly stream the audio without downloading
       playAudio(audioUrl);
     } catch (error) {
       console.error('Error fetching audio URL', error);
