@@ -510,36 +510,29 @@ const AudioPlayer = () => {
 
   const fetchAudioUrl = async () => {
     try {
-      const response = await axios.get(`http://192.168.1.7:3000/audio`, {
+      const response = await axios.get(`http://192.168.1.10:3000/audio`, {
         params: {url: videoUrl},
       });
       const audioUrl = response.data.audioUrl;
-
-      // Download the audio file
-      const localAudioPath = `${RNFS.DocumentDirectoryPath}/audio.mp3`;
-      const download = await RNFS.downloadFile({
-        fromUrl: audioUrl,
-        toFile: localAudioPath,
-      }).promise;
-      console.log('RESPONSE',download)
-      if (download.statusCode === 200) {
-        playAudio(localAudioPath);
-      }
+  
+      // Directly stream the audio without downloading
+      playAudio(audioUrl);
     } catch (error) {
       console.error('Error fetching audio URL', error);
     }
   };
-
-  const playAudio = path => {
-    const sound = new Sound(path, '', error => {
+  
+  const playAudio = (audioUrl) => {
+    const sound = new Sound(audioUrl, '', (error) => {
       if (error) {
         console.error('Failed to load sound', error);
         return;
       }
-      setAudio(sound);
       sound.play();
+      setAudio(sound);
     });
   };
+  
 
   const stopAudio = () => {
     if (audio) {
@@ -553,6 +546,7 @@ const AudioPlayer = () => {
         style={styles.input}
         placeholder="Enter YouTube video URL"
         onChangeText={setVideoUrl}
+        
       />
       <Button title="Play Audio" onPress={fetchAudioUrl} />
       <Button title="Stop Audio" onPress={stopAudio} />
